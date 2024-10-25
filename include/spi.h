@@ -6,9 +6,9 @@
 #define SPI_PIN_CS 17
 #define SPI_PIN_RX 16
 
-#include "hardware/spi.h"
-
 #include <stdint.h>
+
+void spi_initialize_pins();
 
 int8_t spi_reg_get_byte(const uint8_t reg);
 int16_t spi_reg_get_short(const uint8_t reg);

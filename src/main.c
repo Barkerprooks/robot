@@ -1,10 +1,10 @@
-#include "accelerometer.h"
-#include "motors.h"
-
 #include "pico/stdlib.h"
 
 #include <stdbool.h>
 #include <stdio.h>
+
+#include "accelerometer.h"
+#include "motors.h"
 
 bool initialize_robot(bool debug) {
     if (debug)

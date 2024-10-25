@@ -1,28 +1,17 @@
-#include "accelerometer.h"
+#include "pico/stdlib.h"
 #include "spi.h"
 
-#include "pico/stdlib.h"
+#include "accelerometer.h"
 
 bool initialize_accelerometer(const uint16_t sample_rate, const uint8_t range) {
     uint8_t control_1_options = 0x07; // start with xyz enabled
-    uint8_t control_4_options = 0x88; // start with 
+    uint8_t control_4_options = 0x88; // start with high refresh rate
 
-    // initialize the chip select pin (normal GPIO on/off)
-    gpio_init(SPI_PIN_CS);
-    gpio_set_dir(SPI_PIN_CS, GPIO_OUT);
-    gpio_put(SPI_PIN_CS, 1);
-
-    // start up SPI interface for accelerometer at 1MHz
-    spi_init(spi0, 1000000);
-    spi_set_format(spi0, 8, 1, 1, SPI_MSB_FIRST); // big-endian
+    // initialize the SPI pins
+    spi_initialize_pins();
     
-    // configure pins for SPI
-    gpio_set_function(SPI_PIN_SCK, GPIO_FUNC_SPI);
-    gpio_set_function(SPI_PIN_RX, GPIO_FUNC_SPI);
-    gpio_set_function(SPI_PIN_TX, GPIO_FUNC_SPI);
-    
-    // ask for the value at register 0x0F
-    if (spi_reg_get_byte(REG_ACCELEROMETER_DEVICE_ID) != 0x33)
+    // ask for the value at register 0x0F, make sure it's equal to the LIS3DH device ID
+    if (spi_reg_get_byte(REG_ACCELEROMETER_DEVICE_ID) != LIS3DH_DEVICE_ID)
         return false;
     
     switch (sample_rate) {

@@ -10,6 +10,7 @@
 #define REG_ACCELEROMETER_X 0x28
 #define REG_ACCELEROMETER_Y 0x2a
 #define REG_ACCELEROMETER_Z 0x2c
+#define LIS3DH_DEVICE_ID 0x33
 
 // implementation for LIS3DH on an SPI interface
 

@@ -1,7 +1,7 @@
-#include "motors.h"
-
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
+
+#include "motors.h"
 
 void initialize_motors() {
     uint8_t pins[] = { MOTOR_A_PIN_A, MOTOR_A_PIN_B, MOTOR_B_PIN_A, MOTOR_B_PIN_B };
