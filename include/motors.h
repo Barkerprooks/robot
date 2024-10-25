@@ -9,11 +9,13 @@
 #define MOTOR_B_PIN_A 10
 #define MOTOR_B_PIN_B 11
 
-// start up the robot
-bool initialize_robot();
+// attach pins and activate PWM
+void initialize_motors();
 
 // motor functions
 void drive_motors_forward(const uint8_t power);
 void drive_motors_backward(const uint8_t power);
+void drive_motors_left(const uint8_t power);
+void drive_motors_right(const uint8_t power);
 
 #endif

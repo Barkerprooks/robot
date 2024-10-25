@@ -27,7 +27,7 @@ void initialize_motors() {
     }
 }
 
-void drive_motors_forward(uint8_t power) {
+void drive_motors_forward(const uint8_t power) {
     // motor A (left) moves CW
     pwm_set_gpio_level(MOTOR_A_PIN_A, power);
     pwm_set_gpio_level(MOTOR_A_PIN_B, 0);
@@ -36,10 +36,28 @@ void drive_motors_forward(uint8_t power) {
     pwm_set_gpio_level(MOTOR_B_PIN_B, power);
 }
 
-void drive_motors_backward(uint8_t power) {
+void drive_motors_backward(const uint8_t power) {
     // motor A (left) moves CCW
     pwm_set_gpio_level(MOTOR_A_PIN_A, 0);
     pwm_set_gpio_level(MOTOR_A_PIN_B, power);
+    // motor B (right) moves CW
+    pwm_set_gpio_level(MOTOR_B_PIN_A, power);
+    pwm_set_gpio_level(MOTOR_B_PIN_B, 0);
+}
+
+void drive_motors_left(const uint8_t power) {
+    // motor A (left) moves CCW
+    pwm_set_gpio_level(MOTOR_A_PIN_A, 0);
+    pwm_set_gpio_level(MOTOR_A_PIN_B, power);
+    // motor B (right) moves CCW
+    pwm_set_gpio_level(MOTOR_B_PIN_A, 0);
+    pwm_set_gpio_level(MOTOR_B_PIN_B, power);
+}
+
+void drive_motors_right(const uint8_t power) {
+    // motor A (left) moves CW
+    pwm_set_gpio_level(MOTOR_A_PIN_A, power);
+    pwm_set_gpio_level(MOTOR_A_PIN_B, 0);
     // motor B (right) moves CW
     pwm_set_gpio_level(MOTOR_B_PIN_A, power);
     pwm_set_gpio_level(MOTOR_B_PIN_B, 0);

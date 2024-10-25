@@ -80,7 +80,7 @@ bool initialize_accelerometer(const uint16_t sample_rate, const uint8_t range) {
 }
 
 int16_t accelerometer_get_axis(uint8_t axis_pin) {
-    uint16_t value = 0xff;
+    int16_t value = 0xff;
     while (value == 0xff)
         value = spi_reg_get_short(axis_pin);
     return value;

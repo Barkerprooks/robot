@@ -12,6 +12,7 @@
 
 int8_t spi_reg_get_byte(const uint8_t reg);
 int16_t spi_reg_get_short(const uint8_t reg);
+
 void spi_reg_put_byte(const uint8_t reg, const uint8_t data);
 
 #endif
