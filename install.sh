@@ -4,7 +4,7 @@ PICO_SDX=sda1
 
 mkdir -p build && cd build
 
-cmake .. && make
+cmake -DPICO_BOARD=pico_w .. && make
 
 sudo mount /dev/$PICO_SDX /mnt
 sudo cp robot.uf2 /mnt

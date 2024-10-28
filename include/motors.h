@@ -10,7 +10,7 @@
 #define MOTOR_B_PIN_B 11
 
 // attach pins and activate PWM
-void initialize_motors();
+void init_motors();
 
 // motor functions
 void drive_motors_forward(const uint8_t power);

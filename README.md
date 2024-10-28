@@ -2,7 +2,7 @@
 Building a robot using an RP2040 as the main microcontroller (Raspberry Pi Pico W)
 
 ## Build
-You will need the [pico-sdk](https://github.com/raspberrypi/pico-sdk) repository. Make sure to read the documentation and set the `PICO_SDK_HOME` environment variable. After that, run these commands in the root directory
+You will need the [pico-sdk](https://github.com/raspberrypi/pico-sdk) repository. Make sure to read the documentation and set the `PICO_SDK_PATH` environment variable. After that, run these commands in the root directory
 ```
 mkdir build
 cd build
