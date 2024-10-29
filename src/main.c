@@ -60,14 +60,14 @@ int main() {
 
         read_sixaxis(&data);
         
-        //printf("accel -> x: %06lu, y: %06lu, z: %06lu\n", data.accel.x, data.accel.y, data.accel.z);
-        //printf("gyro  -> x: %06lu, y: %06lu, z: %06lu\n", data.gyro.x, data.gyro.y, data.gyro.z);
+        printf("accel -> x: %06lu, y: %06lu, z: %06lu\n", data.accel.x, data.accel.y, data.accel.z);
+        printf("gyro  -> x: %06lu, y: %06lu, z: %06lu\n", data.gyro.x, data.gyro.y, data.gyro.z);
     
-        pid = pid_zero(data, delta);
+        //pid = pid_zero(data, delta);
 
         //printf("PID: %0.4f\n", pid);
 
-        //sleep_ms(10);
+        sleep_ms(10);
     }
 
     return 0;
