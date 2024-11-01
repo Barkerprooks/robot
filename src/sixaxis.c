@@ -60,7 +60,7 @@ void sixaxis_read(struct sixaxis *data) {
     bytes_to_tuple(buffer, &(data->gyro));
 }
 
-float angle(struct sixaxis data, float delta) {
+float interpolate_angle(struct sixaxis data, float delta) {
     float denominator = sqrt(pow(data.accel.x / ACCEL_SCALE, 2) + pow(data.accel.z / ACCEL_SCALE, 2));
     float accel_angle = atan((data.accel.y / ACCEL_SCALE) / denominator) * 57.29577950560105;
     float gyro_angle = data.gyro.x / 131.0;

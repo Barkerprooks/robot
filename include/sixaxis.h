@@ -15,4 +15,6 @@ struct sixaxis {
 void sixaxis_init();
 void sixaxis_read(struct sixaxis *data);
 
+float interpolate_angle(struct sixaxis data, float delta);
+
 #endif

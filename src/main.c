@@ -1,6 +1,5 @@
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
-#include "cyw43_config.h"
 
 #include <stdio.h>
 
@@ -36,16 +35,14 @@ int main() {
     }
 
     cyw43_arch_enable_sta_mode();
-    
-    if (cyw43_arch_wifi_connect_timeout_ms("ssid", "password", CYW43_AUTH_WPA3_WPA2_AES_PSK, 30000)) {
-        printf("failed to connect\n");
-    } else {
-        printf("connected!\n");
-    }
+    cyw43_arch_wifi_connect_timeout_ms("ssid", "password", CYW43_AUTH_WPA3_WPA2_AES_PSK, 30000);
 #endif
 
     // meatspace
+    const uint64_t delay = 100;
+
     struct sixaxis sensor; // the only sensor we have, 6axis gyro + accelerometer
+    float angle, power;
 
     // initialize peripherials
     sixaxis_init();
@@ -54,13 +51,23 @@ int main() {
     while (1) {
         sixaxis_read(&sensor);
 
+        angle = interpolate_angle(sensor, delay);
+        power = pid(angle, delay); // correcting value to get angle to zero
+
+        printf("\033[2J\033[H"); // clear screen before writing, we can monitor the values easier that way
         printf(cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) == CYW43_LINK_UP ? "connected\n" : "disconnected\n");
-        printf("gyro  -> x: %06d, y: %06d, z: %06d\n", 
+        printf("accel -> x: %05d, y: %05d, z: %05d\n", 
+            sensor.accel.x, 
+            sensor.accel.y, 
+            sensor.accel.z);
+        printf("gyro  -> x: %05d, y: %05d, z: %05d\n", 
             sensor.gyro.x, 
             sensor.gyro.y, 
             sensor.gyro.z);
+        printf("angle: %04f degrees\n", angle);
+        printf("power: %04f\n", power);
         
-        sleep_ms(100);
+        sleep_ms(delay);
     }
 
     return 0;
