@@ -50,7 +50,7 @@ bool read_sixaxis(struct sixaxis *data) {
 }
 
 void reset_sixaxis() {
-    // 0x6b = reset, 0x00 = write request
+    // 0x6b = POWER_CNTL, 0x00 = power on / reset
     uint8_t reset_bytes[2] = { 0x6b, 0x00 };
     i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, reset_bytes, 2, false);
 }
