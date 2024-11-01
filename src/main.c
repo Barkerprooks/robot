@@ -9,7 +9,6 @@
 #include "dhcp.h"
 #include "dns.h"
 
-
 int main() {
     // below: networking (AP version, the robot can host its own network)
     // still under construction
@@ -54,6 +53,7 @@ int main() {
     while (1) {
         sixaxis_read(&sensor);
 
+        printf(cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) == CYW43_LINK_UP ? "connected\n" : "disconnected\n");
         printf("gyro  -> x: %06d, y: %06d, z: %06d\n", 
             sensor.gyro.x, 
             sensor.gyro.y, 
