@@ -3,6 +3,11 @@
 
 #include "motors.h"
 
+#define MOTOR_A_PIN_A 8
+#define MOTOR_A_PIN_B 9
+#define MOTOR_B_PIN_A 10
+#define MOTOR_B_PIN_B 11
+
 void init_motors() {
     uint8_t pins[4] = { MOTOR_A_PIN_A, MOTOR_A_PIN_B, MOTOR_B_PIN_A, MOTOR_B_PIN_B };
     

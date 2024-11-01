@@ -6,11 +6,8 @@
                 "${workspaceFolder}/**",
                 "/home/parker/.pico-sdk/**"
             ],
-            "defines": [],
-            "compilerPath": "/usr/bin/gcc",
             "cStandard": "c17",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "linux-gcc-arm64"
+            "cppStandard": "gnu++17"
         }
     ],
     "version": 4
