@@ -9,10 +9,12 @@
 #include "dhcp.h"
 #include "dns.h"
 
+#define AP_MODE 0
+
 int main() {
     // below: networking (AP version, the robot can host its own network)
     // still under construction
-#ifdef AP_MODE
+#if AP_MODE
     ip4_addr_t gateway, netmask; // we are the gateway
     struct dhcp_server dhcpd; // allows the pi to assign IP addresses
     struct dns_server dnsd; // allows host discovery
@@ -28,7 +30,6 @@ int main() {
 
     dhcp_server_init(&dhcpd, gateway);
 #else
-    // just connect to local network for now
     if (cyw43_arch_init()) {
         printf("no networking :(\n");
         return 1;
