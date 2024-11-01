@@ -1,7 +1,6 @@
 #ifndef __sixaxis_h__
 #define __sixaxis_h__
 
-#include <stdbool.h>
 #include <stdint.h>
 
 struct tuple {
@@ -13,9 +12,7 @@ struct sixaxis {
     struct tuple gyro;
 };
 
-void init_sixaxis();
-bool read_sixaxis(struct sixaxis *data);
-
-void reset_sixaxis();
+void sixaxis_init();
+void sixaxis_read(struct sixaxis *data);
 
 #endif

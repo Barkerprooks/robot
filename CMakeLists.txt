@@ -8,6 +8,7 @@ pico_sdk_init()
 
 add_executable(robot 
     src/main.c
+    src/dhcp.c
     src/motors.c
     src/sixaxis.c
 )
@@ -18,6 +19,7 @@ target_link_libraries(robot
     pico_stdlib 
     hardware_i2c
     hardware_pwm
+    pico_cyw43_arch_lwip_threadsafe_background
 )
 
 pico_enable_stdio_usb(robot 1)

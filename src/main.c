@@ -1,73 +1,47 @@
+#include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 
-#include <stdbool.h>
 #include <stdio.h>
-#include <math.h>
-#include <time.h>
 
 #include "sixaxis.h"
 #include "motors.h"
+#include "dhcp.h"
+#include "dns.h"
 
-#define KP 25.0 // error gain
-#define KI 0.0 // integral gain
-#define KD 0.8 // derivative gain
-
-#define ACCEL_SCALE 16384.0
-#define GYRO_SCALE 131.0
-
-void init_robot(bool debug) {
-    if (debug)
-        stdio_init_all();
-
-    printf("initializing sixaxis sensor\n");
-    init_sixaxis();
-
-    printf("initializing motors\n");
-    init_motors();
-}
-
-// composes the acceleration angle
-float angle(struct sixaxis data, float delta) {
-    float denominator = sqrt(pow(data.accel.x / ACCEL_SCALE, 2) + pow(data.accel.z / ACCEL_SCALE, 2));
-    float accel_angle = atan((data.accel.y / ACCEL_SCALE) / denominator) * 57.29577950560105;
-    float gyro_angle = data.gyro.x / 131.0;
-    return 0.98 * (gyro_angle * delta) + 0.02 * accel_angle;
-}
-
-// pid algorithm tending towards zero (0.0)
-float pid_zero(struct sixaxis data, float delta) {
-    static float prev = 0, i = 0;
-    float p, d;
-
-    p = KP * (angle(data, delta) - 0); // calculate error
-    // i += KI * p; // update integral (is there no reason to do this???)
-    d = KD * ((p - prev) / delta); // calculate derivative
-    prev = p;
-    
-    return p + d;
-}
 
 int main() {
-    struct sixaxis data;
+    // networking 
+    ip4_addr_t gateway, netmask; // we are the gateway
+    struct dhcp_server dhcpd; // allows the pi to assign IP addresses
+    struct dns_server dnsd; // allows host discovery
 
-    printf("initializing robot\n");
-    init_robot(true);
+    // meatspace
+    struct sixaxis sensor; // the only sensor we have, 6axis gyro + accelerometer
 
-    float pid, delta = (float) time(NULL);
+    cyw43_arch_init(); // enable networking kernel
+    stdio_init_all();  // allow STDOUT over USB
 
-    while (true) {
-        delta = (time(NULL) - delta) / 1000;
+    // start up WiFi AP, idc if theres no password
+    cyw43_arch_enable_ap_mode("robotuah", NULL, CYW43_AUTH_OPEN);
 
-        read_sixaxis(&data);
+    // initialize basic networking services
+    IP4_ADDR(&gateway, 192, 168, 0, 1); // _gateway on the first address
+
+    dhcp_server_init(&dhcpd, gateway);
+
+    // initialize peripherials
+    sixaxis_init();
+    motors_init();
+
+    while (1) {
+        sixaxis_read(&sensor);
+
+        printf("gyro  -> x: %06d, y: %06d, z: %06d\n", 
+            sensor.gyro.x, 
+            sensor.gyro.y, 
+            sensor.gyro.z);
         
-        printf("accel -> x: %06lu, y: %06lu, z: %06lu\n", data.accel.x, data.accel.y, data.accel.z);
-        printf("gyro  -> x: %06lu, y: %06lu, z: %06lu\n", data.gyro.x, data.gyro.y, data.gyro.z);
-    
-        //pid = pid_zero(data, delta);
-
-        //printf("PID: %0.4f\n", pid);
-
-        sleep_ms(10);
+        sleep_ms(100);
     }
 
     return 0;

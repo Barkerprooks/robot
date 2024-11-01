@@ -8,7 +8,7 @@
 #define MOTOR_B_PIN_A 10
 #define MOTOR_B_PIN_B 11
 
-void init_motors() {
+void motors_init() {
     uint8_t pins[4] = { MOTOR_A_PIN_A, MOTOR_A_PIN_B, MOTOR_B_PIN_A, MOTOR_B_PIN_B };
     
     pwm_config config = pwm_get_default_config();
