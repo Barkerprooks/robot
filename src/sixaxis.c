@@ -1,6 +1,7 @@
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
 
+#include <stdio.h>
 #include <stdint.h>
 #include <math.h>
 
@@ -40,20 +41,19 @@ void sixaxis_init() {
 }
 
 void sixaxis_read(struct sixaxis *data) {
-    uint8_t device[1] = { MPU6050_ACCEL_REG }; // buffer to send the request for which device we want
+    uint8_t accel = MPU6050_ACCEL_REG; // buffer to send the request for which device we want
+    uint8_t gyro = MPU6050_GYRO_REG; // buffer to send the request for which device we want
     uint8_t buffer[6]; // 6 bytes = 3 shorts (x, y, z)
 
     // request a read from the accelerometer
-    i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, device, 1, true);
+    i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, &accel, 1, true);
     i2c_read_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 6, false);
 
     // dump the buffer data into the x, y, z fields
     bytes_to_tuple(buffer, &(data->accel));
 
-    device[0] = MPU6050_GYRO_REG; // switch to the gyro register and repeat the process
-
     // repeat the same operation but with the gyro register
-    i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, device, 1, true);
+    i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, &gyro, 1, true);
     i2c_read_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 6, false);
 
     // dump gyro buffer

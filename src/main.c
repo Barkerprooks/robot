@@ -5,12 +5,20 @@
 
 #include "sixaxis.h"
 #include "motors.h"
-#include "dhcp.h"
-#include "dns.h"
+#include "pid.h"
 
 #define AP_MODE 0
+#define DELAY 10
+
+#if AP_MODE
+#include "dhcp.h"
+#include "dns.h"
+#endif 
 
 int main() {
+
+    stdio_init_all();
+
     // below: networking (AP version, the robot can host its own network)
     // still under construction
 #if AP_MODE
@@ -29,45 +37,63 @@ int main() {
 
     dhcp_server_init(&dhcpd, gateway);
 #else
-    if (cyw43_arch_init()) {
-        printf("no networking :(\n");
-        return 1;
-    }
+    // if (cyw43_arch_init()) {
+    //     printf("no networking :(\n");
+    //     return 1;
+    // }
 
-    cyw43_arch_enable_sta_mode();
-    cyw43_arch_wifi_connect_timeout_ms("ssid", "password", CYW43_AUTH_WPA3_WPA2_AES_PSK, 30000);
+    // cyw43_arch_enable_sta_mode();
+    // cyw43_arch_wifi_connect_timeout_ms("Frontier0016", "LemonHorse3419", CYW43_AUTH_WPA2_AES_PSK, 30000);
 #endif
 
-    // meatspace
-    const uint64_t delay = 100;
+    //printf("%d\n", cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA));
 
+    // meatspace
     struct sixaxis sensor; // the only sensor we have, 6axis gyro + accelerometer
     float angle, power;
+    uint64_t count = 0;
+
+    gpio_init(14);
+    gpio_init(15);
+
+    gpio_set_dir(14, GPIO_OUT);
+    gpio_set_dir(15, GPIO_OUT);
 
     // initialize peripherials
     sixaxis_init();
-    motors_init();
+    // motors_init();
 
     while (1) {
+        printf("\033[2J\033[H"); // clear screen before writing, we can monitor the values easier that way
+
         sixaxis_read(&sensor);
 
-        angle = interpolate_angle(sensor, delay);
-        power = pid(angle, delay); // correcting value to get angle to zero
+        angle = interpolate_angle(sensor, 1);
+        power = pid(angle, 1); // correcting value to get angle to zero
 
-        printf("\033[2J\033[H"); // clear screen before writing, we can monitor the values easier that way
-        printf(cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) == CYW43_LINK_UP ? "connected\n" : "disconnected\n");
+        //printf(cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) == CYW43_LINK_UP ? "connected\n" : "disconnected\n");
         printf("accel -> x: %05d, y: %05d, z: %05d\n", 
-            sensor.accel.x, 
+            sensor.accel.x,
             sensor.accel.y, 
             sensor.accel.z);
         printf("gyro  -> x: %05d, y: %05d, z: %05d\n", 
             sensor.gyro.x, 
             sensor.gyro.y, 
             sensor.gyro.z);
-        printf("angle: %04f degrees\n", angle);
-        printf("power: %04f\n", power);
         
-        sleep_ms(delay);
+        printf("angle: %.1f degrees\n", angle);
+        printf("power: %.1f\n", power);
+        printf("count: %09llu\n", count++);
+
+        if (power > 0) {
+            gpio_put(14, true);
+            gpio_put(15, false);
+        } else {
+            gpio_put(14, false);
+            gpio_put(15, true);
+        }
+
+        sleep_ms(DELAY);
     }
 
     return 0;

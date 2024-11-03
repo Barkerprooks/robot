@@ -7,6 +7,7 @@ project(robot)
 pico_sdk_init()
 
 add_executable(robot 
+    src/pid.c
     src/main.c
     src/dhcp.c
     src/motors.c
