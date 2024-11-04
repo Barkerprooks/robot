@@ -2,99 +2,74 @@
 #include "pico/cyw43_arch.h"
 
 #include <stdio.h>
+#include <time.h>
 
 #include "sixaxis.h"
 #include "motors.h"
 #include "pid.h"
 
-#define AP_MODE 0
-#define DELAY 10
+#define DELAY 25
+#define DEBUG 1
 
-#if AP_MODE
-#include "dhcp.h"
-#include "dns.h"
-#endif 
+#define WIFI_SSID     ""
+#define WIFI_PASSWORD ""
 
-int main() {
+#define NETWORK_INIT 0x01
+#define SIXAXIS_INIT 0x10
 
-    stdio_init_all();
+uint8_t network_init(uint8_t attempts) {    
+    if (cyw43_arch_init())
+        return -1;
+    
+    cyw43_arch_enable_sta_mode();
 
-    // below: networking (AP version, the robot can host its own network)
-    // still under construction
-#if AP_MODE
-    ip4_addr_t gateway, netmask; // we are the gateway
-    struct dhcp_server dhcpd; // allows the pi to assign IP addresses
-    struct dns_server dnsd; // allows host discovery
-
-    cyw43_arch_init(); // enable networking kernel
-    stdio_init_all();  // allow STDOUT over USB
-
-    // start up WiFi AP, idc if theres no password
-    cyw43_arch_enable_ap_mode("robotuah", NULL, CYW43_AUTH_OPEN);
-
-    // initialize basic networking services
-    IP4_ADDR(&gateway, 192, 168, 0, 1); // _gateway on the first address
-
-    dhcp_server_init(&dhcpd, gateway);
-#else
-    // if (cyw43_arch_init()) {
-    //     printf("no networking :(\n");
-    //     return 1;
-    // }
-
-    // cyw43_arch_enable_sta_mode();
-    // cyw43_arch_wifi_connect_timeout_ms("Frontier0016", "LemonHorse3419", CYW43_AUTH_WPA2_AES_PSK, 30000);
+    while (attempts--) {
+#if DEBUG
+        printf("%d > attempting to connect to %s\n", attempts, WIFI_SSID);
 #endif
-
-    //printf("%d\n", cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA));
-
-    // meatspace
-    struct sixaxis sensor; // the only sensor we have, 6axis gyro + accelerometer
-    float angle, power;
-    uint64_t count = 0;
-
-    gpio_init(14);
-    gpio_init(15);
-
-    gpio_set_dir(14, GPIO_OUT);
-    gpio_set_dir(15, GPIO_OUT);
-
-    // initialize peripherials
-    sixaxis_init();
-    // motors_init();
-
-    while (1) {
-        printf("\033[2J\033[H"); // clear screen before writing, we can monitor the values easier that way
-
-        sixaxis_read(&sensor);
-
-        angle = interpolate_angle(sensor, 1);
-        power = pid(angle, 1); // correcting value to get angle to zero
-
-        //printf(cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) == CYW43_LINK_UP ? "connected\n" : "disconnected\n");
-        printf("accel -> x: %05d, y: %05d, z: %05d\n", 
-            sensor.accel.x,
-            sensor.accel.y, 
-            sensor.accel.z);
-        printf("gyro  -> x: %05d, y: %05d, z: %05d\n", 
-            sensor.gyro.x, 
-            sensor.gyro.y, 
-            sensor.gyro.z);
-        
-        printf("angle: %.1f degrees\n", angle);
-        printf("power: %.1f\n", power);
-        printf("count: %09llu\n", count++);
-
-        if (power > 0) {
-            gpio_put(14, true);
-            gpio_put(15, false);
-        } else {
-            gpio_put(14, false);
-            gpio_put(15, true);
-        }
-
-        sleep_ms(DELAY);
+        if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000) == 0)
+            return -2;
     }
 
     return 0;
+}
+
+int main() {
+    stdio_init_all(); // debug
+
+    struct sixaxis sensor; // the only sensor we have, 6axis gyro + accelerometer
+    uint16_t delta = time(NULL);
+
+    sixaxis_init(&sensor);
+    network_init(5);
+    motors_init();
+
+    while (1) {
+        printf("\033[2J\033[H"); // clear screen before writing, we can monitor the values easier that way
+        
+        sixaxis_read(&sensor, delta);
+        delta = time(NULL) - delta; // delta should come after reading
+
+        double ax = sensor.accel.x * sensor.accel.resolution;
+        double ay = sensor.accel.y * sensor.accel.resolution;
+        double az = sensor.accel.z * sensor.accel.resolution;
+        double gx = sensor.gyro.x * sensor.gyro.resolution;
+        double gy = sensor.gyro.y * sensor.gyro.resolution;
+        double gz = sensor.gyro.z * sensor.gyro.resolution;
+
+        printf("accel:\n");
+        printf("  x: %f\n", ax);
+        printf("  y: %f\n", ay);
+        printf("  z: %f\n", az);
+
+        printf("gyro:\n");
+        printf("  x: %f\n", gx);
+        printf("  y: %f\n", gy);
+        printf("  z: %f\n", gz);
+        
+        printf("pitch: %f\n", sensor.pitch);
+        printf("yaw: %f\n", sensor.yaw);
+
+        sleep_ms(DELAY);
+    }
 }
