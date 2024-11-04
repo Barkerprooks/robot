@@ -3,18 +3,18 @@
 
 #include <stdint.h>
 
-struct tuple {
+struct sixaxis_device {
+    double resolution;
     int16_t x, y, z;
 };
 
 struct sixaxis {
-    struct tuple accel;
-    struct tuple gyro;
+    struct sixaxis_device accel;
+    struct sixaxis_device gyro;
+    double pitch, yaw;
 };
 
-void sixaxis_init();
-void sixaxis_read(struct sixaxis *data);
-
-float interpolate_angle(struct sixaxis data, float delta);
+uint8_t sixaxis_init(struct sixaxis *sensor);
+void sixaxis_read(struct sixaxis *sensor, uint16_t delta);
 
 #endif
