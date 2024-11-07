@@ -17,7 +17,7 @@
 #define NETWORK_INIT 0x01
 #define SIXAXIS_INIT 0x10
 
-uint8_t network_init(uint8_t attempts) {    
+int8_t network_init(uint8_t attempts) {    
     if (cyw43_arch_init())
         return -1;
     
@@ -28,20 +28,21 @@ uint8_t network_init(uint8_t attempts) {
         printf("%d > attempting to connect to %s\n", attempts, WIFI_SSID);
 #endif
         if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000) == 0)
-            return -2;
+            return 0;
     }
 
-    return 0;
+    return -2;
 }
 
 int main() {
     stdio_init_all(); // debug
 
     struct sixaxis sensor; // the only sensor we have, 6axis gyro + accelerometer
+    
     uint16_t delta = time(NULL);
+    int8_t network = network_init(5);
 
     sixaxis_init(&sensor);
-    network_init(5);
     motors_init();
 
     while (1) {
@@ -53,22 +54,26 @@ int main() {
         double ax = sensor.accel.x * sensor.accel.resolution;
         double ay = sensor.accel.y * sensor.accel.resolution;
         double az = sensor.accel.z * sensor.accel.resolution;
+        
         double gx = sensor.gyro.x * sensor.gyro.resolution;
         double gy = sensor.gyro.y * sensor.gyro.resolution;
         double gz = sensor.gyro.z * sensor.gyro.resolution;
 
-        printf("accel:\n");
+        printf("accel\n");
         printf("  x: %f\n", ax);
         printf("  y: %f\n", ay);
         printf("  z: %f\n", az);
 
-        printf("gyro:\n");
+        printf("gyro\n");
         printf("  x: %f\n", gx);
         printf("  y: %f\n", gy);
         printf("  z: %f\n", gz);
-        
+
+        printf("delta: %d\n", delta);        
         printf("pitch: %f\n", sensor.pitch);
-        printf("yaw: %f\n", sensor.yaw);
+        printf("  yaw: %f\n\n", sensor.yaw);
+
+        printf("network: %s\n", network == 0 ? "connected" : "disconnected");
 
         sleep_ms(DELAY);
     }
