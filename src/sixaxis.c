@@ -33,16 +33,16 @@
 #define MPU6050_POWER_CLOCK_RESET    7
 
 // gyro settings
-#define MPU6050_GYRO_FREQ_250 0
-//#define MPU6050_GYRO_FREQ_500  1
-//#define MPU6050_GYRO_FREQ_1000 2
-//#define MPU6050_GYRO_FREQ_2000 3
+#define MPU6050_GYRO_FREQ_250  0
+#define MPU6050_GYRO_FREQ_500  1
+#define MPU6050_GYRO_FREQ_1000 2
+#define MPU6050_GYRO_FREQ_2000 3
 
 // accelerometer settings
-#define MPU6050_ACCEL_FREQ_2 0
-//#define MPU6050_ACCEL_FREQ_4  1
-//#define MPU6050_ACCEL_FREQ_8  2
-//#define MPU6050_ACCEL_FREQ_16 3
+#define MPU6050_ACCEL_FREQ_2  0
+#define MPU6050_ACCEL_FREQ_4  1
+#define MPU6050_ACCEL_FREQ_8  2
+#define MPU6050_ACCEL_FREQ_16 3
 
 #define MPU6050_G 32768.0
 
@@ -67,7 +67,17 @@ static uint8_t sixaxis_test() {
 static void sixaxis_init_gyro(struct sixaxis_device *gyro, uint8_t frequency) {
     uint8_t buffer[2] = { MPU6050_GYRO_CONFIG_REG, frequency };
     switch (frequency) {
+        case MPU6050_GYRO_FREQ_2000:
+            gyro->resolution = 2000.0 / MPU6050_G;
+            break;
+        case MPU6050_GYRO_FREQ_1000:
+            gyro->resolution = 1000.0 / MPU6050_G;
+            break;
+        case MPU6050_GYRO_FREQ_500:
+            gyro->resolution = 500.0 / MPU6050_G;
+            break;
         case MPU6050_GYRO_FREQ_250:
+        default:
             gyro->resolution = 250.0 / MPU6050_G;
             break;
     }
@@ -77,9 +87,20 @@ static void sixaxis_init_gyro(struct sixaxis_device *gyro, uint8_t frequency) {
 static void sixaxis_init_accel(struct sixaxis_device *accel, uint8_t frequency) {
     uint8_t buffer[2] = { MPU6050_ACCEL_CONFIG_REG, frequency };
     switch (frequency) {
+        case MPU6050_ACCEL_FREQ_16:
+            accel->resolution = 16.0 / MPU6050_G;
+            break;
+        case MPU6050_ACCEL_FREQ_8:
+            accel->resolution = 8.0 / MPU6050_G;
+            break;
+        case MPU6050_ACCEL_FREQ_4:
+            accel->resolution = 4.0 / MPU6050_G;
+            break;
         case MPU6050_ACCEL_FREQ_2:
+        default:
             accel->resolution = 2.0 / MPU6050_G;
             break;
+
     }
     i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 2, false);
 }
