@@ -45,11 +45,11 @@ int main() {
 
 // NETWORKING
     struct udp_pcb *socket = udp_new();
-    struct pbuf *buffer = pbuf_alloc(PBUF_TRANSPORT, 12, PBUF_RAM);
-    uint8_t message[12] = "hello world\n";
+    struct pbuf *buffer;
+    char message[12] = "hello world\n";
     ip_addr_t ip;
 
-    buffer->payload = message;
+    buffer->payload = (void *) message;
     buffer->len = 12;
     buffer->tot_len = 12;
 

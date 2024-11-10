@@ -6,7 +6,7 @@ You will need the [pico-sdk](https://github.com/raspberrypi/pico-sdk) repository
 ```
 mkdir build
 cd build
-cmake .. && make
+cmake -DPICO_BOARD=pico_w .. && make
 ```
 
 ## Install
