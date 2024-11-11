@@ -1,11 +1,10 @@
-#include "pico/stdlib.h"
-
 #include <stdio.h>
-#include <time.h>
+#include "pico/stdlib.h"
 
 #include "service.h"
 #include "sixaxis.h"
 #include "machine.h"
+#include "pid.h"
 
 #define DEBUG_PRINT_DELAY 25
 #define DEBUG 1
@@ -14,13 +13,15 @@
 #define WIFI_PASSWORD ""
 
 int main() {
+#if DEBUG
     stdio_init_all();
+#endif
 
     struct service server; // network service to advertise gyro values
     struct sixaxis sensor; // stores values for the gyro sensor
     struct machine robot; // robot status and misc values not from sensors
 
-    double start, stop, delta;
+    double start, stop, delta, pid;
 
     //network_init(&robot, WIFI_SSID, WIFI_PASSWORD, 5);
     //service_init(&robot, &server, 42069);
@@ -35,7 +36,7 @@ int main() {
         start = (double) time_us_64() / 1000.0;
         
         sixaxis_read(&sensor, delta);
-        
+
         stop = (double) time_us_64() / 1000.0;
         delta = (stop - start) * 0.001;
 #if DEBUG

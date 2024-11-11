@@ -30,8 +30,6 @@
 #define MPU6050_POWER_CLOCK_ZGYRO    3
 #define MPU6050_POWER_CLOCK_RESET    7
 
-
-
 #define MPU6050_G 32768.0
 
 static bool sixaxis_failed_to_respond() {
@@ -96,6 +94,7 @@ static void calculate_angle(struct sixaxis *sensor, const double delta) {
     double gyro_angle = sensor->gyro.x * delta;
 
     sensor->angle = 0.9934 * (previous_angle + gyro_angle) + 0.0066 * accel_angle;
+    
     previous_angle = sensor->angle;
 }
 
@@ -155,8 +154,6 @@ void sixaxis_read(struct sixaxis *sensor, const double delta) {
     sensor->gyro.y = (buffer[10] << 8 | buffer[11]);
     sensor->gyro.z = (buffer[12] << 8 | buffer[13]);
 
-    // calculate the pitch and yaw angle using the values we just read
+    // calculate the angle using the values we just read
     calculate_angle(sensor, delta);
-    //calculate_pitch(sensor, delta);
-    //calculate_yaw(sensor, delta);
 }
