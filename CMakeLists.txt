@@ -9,8 +9,9 @@ pico_sdk_init()
 add_executable(robot 
     src/pid.c
     src/main.c
-    src/dhcp.c
     src/motors.c
+    src/machine.c
+    src/service.c
     src/sixaxis.c
 )
 
