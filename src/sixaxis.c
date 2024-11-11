@@ -1,8 +1,6 @@
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
 
-#include <stdbool.h>
-#include <stdint.h>
 #include <math.h>
 
 #include "sixaxis.h"
@@ -32,51 +30,32 @@
 #define MPU6050_POWER_CLOCK_ZGYRO    3
 #define MPU6050_POWER_CLOCK_RESET    7
 
-// gyro settings
-#define MPU6050_GYRO_FREQ_250  0
-#define MPU6050_GYRO_FREQ_500  1
-#define MPU6050_GYRO_FREQ_1000 2
-#define MPU6050_GYRO_FREQ_2000 3
 
-// accelerometer settings
-#define MPU6050_ACCEL_FREQ_2  0
-#define MPU6050_ACCEL_FREQ_4  1
-#define MPU6050_ACCEL_FREQ_8  2
-#define MPU6050_ACCEL_FREQ_16 3
 
 #define MPU6050_G 32768.0
 
-static void bytes_to_tuple(uint8_t buffer[14], struct sixaxis *sensor) {
-    sensor->accel.x = (buffer[0] << 8 | buffer[1]);
-    sensor->accel.y = (buffer[2] << 8 | buffer[3]);
-    sensor->accel.z = (buffer[4] << 8 | buffer[5]);
-    sensor->gyro.x = (buffer[8] << 8 | buffer[9]);
-    sensor->gyro.y = (buffer[10] << 8 | buffer[11]);
-    sensor->gyro.z = (buffer[12] << 8 | buffer[13]);
-}
-
-static uint8_t sixaxis_test() {
+static bool sixaxis_failed_to_respond() {
     uint8_t buffer = MPU6050_WHO_AM_I_REG;
 
     i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, &buffer, 1, true);
     i2c_read_blocking(i2c0, MPU6050_DEVICE_ID, &buffer, 1, false);
 
-    return buffer == MPU6050_DEVICE_ID ? 0 : 1;
+    return buffer == MPU6050_DEVICE_ID ? false : true;
 }
 
-static void sixaxis_init_gyro(struct sixaxis_device *gyro, uint8_t frequency) {
+static void sixaxis_init_gyro(struct sixaxis_dof *gyro, const uint8_t frequency) {
     uint8_t buffer[2] = { MPU6050_GYRO_CONFIG_REG, frequency };
     switch (frequency) {
-        case MPU6050_GYRO_FREQ_2000:
+        case GYRO_FREQ_2000:
             gyro->resolution = 2000.0 / MPU6050_G;
             break;
-        case MPU6050_GYRO_FREQ_1000:
+        case GYRO_FREQ_1000:
             gyro->resolution = 1000.0 / MPU6050_G;
             break;
-        case MPU6050_GYRO_FREQ_500:
+        case GYRO_FREQ_500:
             gyro->resolution = 500.0 / MPU6050_G;
             break;
-        case MPU6050_GYRO_FREQ_250:
+        case GYRO_FREQ_250:
         default:
             gyro->resolution = 250.0 / MPU6050_G;
             break;
@@ -84,19 +63,24 @@ static void sixaxis_init_gyro(struct sixaxis_device *gyro, uint8_t frequency) {
     i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 2, false);
 }
 
-static void sixaxis_init_accel(struct sixaxis_device *accel, uint8_t frequency) {
+void sixaxis_set_offset(uint8_t device_axis_reg, uint16_t offset) {
+    uint8_t buffer[2] = { device_axis_reg, offset };
+    i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 2, false);
+}
+
+static void sixaxis_init_accel(struct sixaxis_dof *accel, const uint8_t frequency) {
     uint8_t buffer[2] = { MPU6050_ACCEL_CONFIG_REG, frequency };
     switch (frequency) {
-        case MPU6050_ACCEL_FREQ_16:
+        case ACCEL_FREQ_16:
             accel->resolution = 16.0 / MPU6050_G;
             break;
-        case MPU6050_ACCEL_FREQ_8:
+        case ACCEL_FREQ_8:
             accel->resolution = 8.0 / MPU6050_G;
             break;
-        case MPU6050_ACCEL_FREQ_4:
+        case ACCEL_FREQ_4:
             accel->resolution = 4.0 / MPU6050_G;
             break;
-        case MPU6050_ACCEL_FREQ_2:
+        case ACCEL_FREQ_2:
         default:
             accel->resolution = 2.0 / MPU6050_G;
             break;
@@ -105,24 +89,18 @@ static void sixaxis_init_accel(struct sixaxis_device *accel, uint8_t frequency) 
     i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 2, false);
 }
 
-static float pitch_angle(struct sixaxis sensor, uint16_t delta) {
-    static double pitch = 0;
-    double gx = (180.0 / 3.14159) * ((double) sensor.gyro.x * ((double) delta / 1000000.0));
-    double ax = (180.0 / 3.14159) * ((double) sensor.accel.x * ((double) delta / 1000000.0));
-    pitch = 0.98 * (pitch + gx) + 0.02 * ax;
-    return pitch;
+static void calculate_angle(struct sixaxis *sensor, const double delta) {
+    static double previous_angle = 0.0;
+    
+    double accel_angle = atan2((double) sensor->accel.y, (double) sensor->accel.z) * 57.2958; // atan2() * (180 / pi) = degrees
+    double gyro_angle = sensor->gyro.x * delta;
+
+    sensor->angle = 0.9934 * (previous_angle + gyro_angle) + 0.0066 * accel_angle;
+    previous_angle = sensor->angle;
 }
 
-static float yaw_angle(struct sixaxis sensor, uint16_t delta) {
-    static double yaw = 0;
-    double gy = (180.0 / 3.14159) * ((double) sensor.gyro.y * ((double) delta / 1000000.0));
-    double ay = (180.0 / 3.14159) * ((double) sensor.accel.y * ((double) delta / 1000000.0));
-    yaw = 0.98 * (yaw + gy) + 0.02 * ay;
-    return yaw;
-}
-
-uint8_t sixaxis_init(struct sixaxis *sensor) {
-    uint8_t buffer[2] = { MPU6050_POWER_REG, MPU6050_POWER_CLOCK_XGYRO };
+void sixaxis_init(struct machine *robot, struct sixaxis *sensor, const uint8_t gyro_freq, const uint8_t accel_freq) {
+    uint8_t buffer[2] = { MPU6050_POWER_REG, MPU6050_POWER_CLOCK_XGYRO }; // initialize clock on x axis
 
     i2c_init(i2c0, 400000); // 400 KHz clock speed
 
@@ -135,29 +113,50 @@ uint8_t sixaxis_init(struct sixaxis *sensor) {
     // request for the device to power itself up
     i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 2, false);
 
-    if (sixaxis_test())
-        return 1;
-
-    sixaxis_init_gyro(&sensor->gyro, MPU6050_GYRO_FREQ_250);
-    sixaxis_init_accel(&sensor->accel, MPU6050_ACCEL_FREQ_2);
-
-    buffer[1] = 0; // pull down to turn on device
-    i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 2, false);
-
-    return 0;
+    // set up the device if it's there
+    if (sixaxis_failed_to_respond()) {
+        robot->sixaxis = SIXAXIS_INIT_ERROR;
+    } else {
+        sixaxis_init_gyro(&sensor->gyro, gyro_freq);
+        sixaxis_init_accel(&sensor->accel, accel_freq);
+    
+        buffer[1] = 0; // keep power register in the first index, set pull down to turn on device
+        i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 2, false);
+        robot->sixaxis = NO_ERROR;
+    }
 }
 
-void sixaxis_read(struct sixaxis *sensor, uint16_t delta) {    
-    uint8_t buffer[14];
+void sixaxis_read(struct sixaxis *sensor, const double delta) {
+    // start reading from accelerometer x register offset.
+    // they are all next to each other
+    // the gyroscope starts at 1 byte away from the accelerometer
+    // so its faster to just read 14 bytes raw and pull out the needed
+    // values
     uint8_t reg = MPU6050_ACCEL_VALUES_REG;
+    uint8_t buffer[14];
 
     // request a read from the accelerometer
     i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, &reg, 1, true);
     i2c_read_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 14, false);
 
     // dump the buffer data into the x, y, z fields
-    bytes_to_tuple(buffer, sensor);
+    // takes a 14 byte raw read from the i2c bus and decodes the values
+    // into the proper devices
+    // [ | | | | | | | | | | | | | ] <- buffer layout
+    //   X   Y   Z       X   Y   Z   <- accel / gyro axis (2-bytes each, LE)
+    
+    // accelerometer
+    sensor->accel.x = (buffer[0] << 8 | buffer[1]);
+    sensor->accel.y = (buffer[2] << 8 | buffer[3]);
+    sensor->accel.z = (buffer[4] << 8 | buffer[5]);
+    
+    // gyroscope
+    sensor->gyro.x = (buffer[8] << 8 | buffer[9]);
+    sensor->gyro.y = (buffer[10] << 8 | buffer[11]);
+    sensor->gyro.z = (buffer[12] << 8 | buffer[13]);
 
-    sensor->pitch = pitch_angle(*sensor, delta);
-    sensor->yaw = yaw_angle(*sensor, delta);
+    // calculate the pitch and yaw angle using the values we just read
+    calculate_angle(sensor, delta);
+    //calculate_pitch(sensor, delta);
+    //calculate_yaw(sensor, delta);
 }
