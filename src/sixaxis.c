@@ -61,11 +61,6 @@ static void sixaxis_init_gyro(struct sixaxis_dof *gyro, const uint8_t frequency)
     i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 2, false);
 }
 
-void sixaxis_set_offset(uint8_t device_axis_reg, uint16_t offset) {
-    uint8_t buffer[2] = { device_axis_reg, offset };
-    i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 2, false);
-}
-
 static void sixaxis_init_accel(struct sixaxis_dof *accel, const uint8_t frequency) {
     uint8_t buffer[2] = { MPU6050_ACCEL_CONFIG_REG, frequency };
     switch (frequency) {
@@ -82,7 +77,6 @@ static void sixaxis_init_accel(struct sixaxis_dof *accel, const uint8_t frequenc
         default:
             accel->resolution = 2.0 / MPU6050_G;
             break;
-
     }
     i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 2, false);
 }
@@ -96,6 +90,24 @@ static void calculate_angle(struct sixaxis *sensor, const double delta) {
     sensor->angle = 0.9934 * (previous_angle + gyro_angle) + 0.0066 * accel_angle;
     
     previous_angle = sensor->angle;
+}
+
+void sixaxis_set_offset(uint8_t device_axis_reg, uint16_t offset) {
+    uint8_t buffer[3] = { device_axis_reg, (offset & 0xff) >> 8, offset & 0xff };
+    i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 3, false);
+}
+
+void sixaxis_calibrate(struct sixaxis *sensor) {
+    
+    // set all offsets to 0
+    sixaxis_set_offset(ACCEL_X_OFFSET, 0);
+    sixaxis_set_offset(ACCEL_Y_OFFSET, 0);
+    sixaxis_set_offset(ACCEL_Z_OFFSET, 0);
+    sixaxis_set_offset(GYRO_X_OFFSET, 0);
+    sixaxis_set_offset(GYRO_Y_OFFSET, 0);
+    sixaxis_set_offset(GYRO_Z_OFFSET, 0);
+
+    sleep_ms(500);
 }
 
 void sixaxis_init(struct machine *robot, struct sixaxis *sensor, const uint8_t gyro_freq, const uint8_t accel_freq) {
