@@ -3,8 +3,7 @@
 
 #include "machine.h"
 
-#define SIXAXIS_INIT_ERROR 1
-#define SIXAXIS_READ_ERROR 2
+#define SIXAXIS_INIT_ERROR 0b00000001
 
 // gyro settings
 #define GYRO_FREQ_250  0
@@ -37,11 +36,9 @@ struct sixaxis {
     double angle;
 };
 
-void calculate_angle(struct sixaxis *sensor, const double delta);
 void sixaxis_set_offset(const uint8_t device_axis_reg, const uint16_t offset);
-uint16_t sixaxis_get_offset(const uint8_t device_axis_reg);
 
 void sixaxis_init(struct machine *robot, struct sixaxis *sensor, const uint8_t gyro_freq, const uint8_t accel_freq);
-void sixaxis_read(struct sixaxis *sensor);
+void sixaxis_read_angle(struct sixaxis *sensor, const double delta);
 
 #endif

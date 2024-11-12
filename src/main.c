@@ -1,9 +1,11 @@
 #include "pico/stdlib.h"
 #include "pico/stdio.h"
 
+#include "machine.h"
+#include "motors.h"
+#include "pid.h"
 #include "service.h"
 #include "sixaxis.h"
-#include "machine.h"
 
 #define DEBUG_PRINT_DELAY 25
 #define DEBUG 1
@@ -19,26 +21,30 @@ int main() {
     struct sixaxis sensor; // stores values for the gyro sensor
     struct machine robot; // robot status and misc values not from sensors
 
-    double start, end, delta = 0.0;
+    double power, start, end, delta = 0.0;
 
-    //network_init(&robot, WIFI_SSID, WIFI_PASSWORD, 5);
-    //service_init(&robot, &server, 42069);
+    network_init(&robot, WIFI_SSID, WIFI_PASSWORD, 3);
+    service_init(&robot, &server, 42069);
     sixaxis_init(&robot, &sensor, GYRO_FREQ_250, ACCEL_FREQ_2);
+    dc_motors_init();
 
-    sixaxis_set_offset(GYRO_X_OFFSET, 64); // my X gyro likes 64
-    sixaxis_set_offset(ACCEL_Z_OFFSET, 1680); // this gets it close enough
-
-    while (running(robot)) {
+    while (true) {
         start = (double) time_us_64() / 1000.0;
 
-        sixaxis_read(&sensor);
-        calculate_angle(&sensor, delta);
+        sixaxis_read_angle(&sensor, delta);
+        power = pid(sensor.angle, delta, 25, 1, 1);
+
+        if (power > 0) {
+            dc_motors_move(MOTOR_DIRECTION_F, power);
+        } else {
+            dc_motors_move(MOTOR_DIRECTION_B, power);
+        }
 
         end = (double) time_us_64() / 1000.0;
         delta = (end - start) * 0.001;
 #if DEBUG
-        printf("network: %s\n", robot.network == NO_ERROR ? "connected" : "disconnected");
-        printf("sixaxis: %s\n\n", robot.sixaxis == NO_ERROR ? "enabled" : "disabled");
+        printf("network: %s\n", robot.status & NETWORK_INITIALIZED_FLAG ? "connected" : "disconnected");
+        printf("sixaxis: %s\n\n", robot.status & SIXAXIS_INITIALIZED_FLAG ? "enabled" : "disabled");
 
         printf(" gyro x: %f\n", (double) sensor.gyro.x * sensor.gyro.resolution);
         printf("accel y: %f\n", (double) sensor.accel.y * sensor.accel.resolution);

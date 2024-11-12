@@ -3,13 +3,15 @@
 
 #include <stdint.h>
 
-// attach pins and activate PWM
-void motors_init();
+#define MOTOR_DIRECTION_F 0
+#define MOTOR_DIRECTION_B 1
+#define MOTOR_DIRECTION_L 2
+#define MOTOR_DIRECTION_R 3
 
-// motor functions
-void drive_motors_forward(const uint8_t power);
-void drive_motors_backward(const uint8_t power);
-void drive_motors_cw(const uint8_t power);
-void drive_motors_ccw(const uint8_t power);
+void dc_motors_init();
+void dc_motors_move(const uint8_t direction, const uint8_t power);
+void dc_motors_halt();
+
+void dc_motors_move_for_ms(const uint8_t direction, const uint8_t power, const double time);
 
 #endif
