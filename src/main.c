@@ -32,12 +32,12 @@ int main() {
         start = (double) time_us_64() / 1000.0;
 
         sixaxis_read_angle(&sensor, delta);
-        power = pid(sensor.angle, delta, 25, 1, 1);
+        robot.speed = pid(sensor.angle, delta, 25, 1, 1);
 
-        if (power > 0) {
-            dc_motors_move(MOTOR_DIRECTION_F, power);
+        if (robot.speed > 0) {
+            dc_motors_move(MOTOR_DIRECTION_F, robot.speed);
         } else {
-            dc_motors_move(MOTOR_DIRECTION_B, power);
+            dc_motors_move(MOTOR_DIRECTION_B, robot.speed);
         }
 
         end = (double) time_us_64() / 1000.0;
