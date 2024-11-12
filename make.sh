@@ -1,4 +1,15 @@
 #!/bin/bash
-rm -rf build && mkdir build && cd build
-cmake -DPICO_BOARD=pico_w .. && make
-mv robot.uf2 .. && cd ..
+
+set -e
+
+mkdir -p ./build
+cd ./build
+cmake -DPICO_BOARD=pico_w ..
+make
+cd ..
+
+if [ "$1" == "install" ]; then
+    sudo mount "$2" /mnt
+    sudo cp ./build/robot.uf2 /mnt && sync
+    sudo umount /mnt
+fi
