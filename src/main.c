@@ -24,7 +24,7 @@ int main() {
     double power, start, end, delta = 0.0;
 
     network_init(&robot, WIFI_SSID, WIFI_PASSWORD, 3);
-    service_init(&robot, &server, 42069);
+    service_init(&robot, &server, 4000, 5000);
     sixaxis_init(&robot, &sensor, GYRO_FREQ_250, ACCEL_FREQ_2);
     dc_motors_init();
 
