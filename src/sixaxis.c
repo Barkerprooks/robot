@@ -113,10 +113,12 @@ uint16_t sixaxis_get_offset(const uint8_t device_axis_reg) {
     return buffer[0] << 8 | buffer[1];
 }
 
-void sixaxis_averages(struct sixaxis *sensor, uint16_t avgs[6]) {
-    uint32_t i, sums[6] = {0, 0, 0, 0, 0, 0};
+void sixaxis_averages(struct sixaxis *sensor, int16_t avgs[6]) {
+    int64_t sums[6] = {0, 0, 0, 0, 0, 0};
+    uint16_t i;
+
     // get averaged values
-    for (i = 0; i < 200; i++) {
+    for (i = 0; i < 512; i++) {
         sixaxis_read(sensor);
         if (i > 100) { // first 100 reads are more likely to be outliers
             sums[0] += sensor->accel.x;
@@ -126,17 +128,17 @@ void sixaxis_averages(struct sixaxis *sensor, uint16_t avgs[6]) {
             sums[4] += sensor->gyro.y;
             sums[5] += sensor->gyro.z;
         }
-        sleep_ms(2);
+        sleep_ms(2); // disallows duplicate values
     }
 
     for (i = 0; i < 6; i++)
-        avgs[i] = sums[i] / 100;
+        avgs[i] = sums[i] / 412;
 }
 
 void sixaxis_calibrate(struct sixaxis *sensor) {
     // this is basically the arduino IMU calibration code, but in pico-sdk
     uint8_t i, regs[6] = { ACCEL_X_OFFSET, ACCEL_Y_OFFSET, ACCEL_Z_OFFSET, GYRO_X_OFFSET, GYRO_Y_OFFSET, GYRO_Z_OFFSET };
-    uint16_t avgs[6], offsets[6];
+    int16_t avgs[6], offsets[6];
 
     // set all offsets to 0
     for (i = 0; i < 6; i++)
