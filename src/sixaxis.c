@@ -99,7 +99,7 @@ void calculate_angle(struct sixaxis *sensor, const double delta) {
 }
 
 void sixaxis_set_offset(const uint8_t device_axis_reg, const uint16_t offset) {
-    uint8_t buffer[3] = { device_axis_reg, (offset >> 8) & 0xff, offset & 0xff };
+    uint8_t buffer[3] = { device_axis_reg, (offset & 0xff00) >> 8, offset & 0xff };
     i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 3, false);
 }
 
@@ -135,16 +135,12 @@ void sixaxis_averages(struct sixaxis *sensor, uint16_t avgs[6]) {
 
 void sixaxis_calibrate(struct sixaxis *sensor) {
     // this is basically the arduino IMU calibration code, but in pico-sdk
+    uint8_t i, regs[6] = { ACCEL_X_OFFSET, ACCEL_Y_OFFSET, ACCEL_Z_OFFSET, GYRO_X_OFFSET, GYRO_Y_OFFSET, GYRO_Z_OFFSET };
     uint16_t avgs[6], offsets[6];
-    uint8_t i, calibrating = 6;
 
     // set all offsets to 0
-    sixaxis_set_offset(ACCEL_X_OFFSET, 0);
-    sixaxis_set_offset(ACCEL_Y_OFFSET, 0);
-    sixaxis_set_offset(ACCEL_Z_OFFSET, 0);
-    sixaxis_set_offset(GYRO_X_OFFSET, 0);
-    sixaxis_set_offset(GYRO_Y_OFFSET, 0);
-    sixaxis_set_offset(GYRO_Z_OFFSET, 0);
+    for (i = 0; i < 6; i++)
+        sixaxis_set_offset(regs[i], 0);
 
     sixaxis_averages(sensor, avgs);
 
@@ -155,43 +151,38 @@ void sixaxis_calibrate(struct sixaxis *sensor) {
     offsets[4] = -avgs[4] / 4;
     offsets[5] = -avgs[5] / 4;
 
-    // fine-tune, loop until calibrated
-    while (calibrating) {
+    for (i = 0; i < 6; i++) {
 
-        calibrating = 6;
+        while (abs(avgs[i]) <= 4) { // calibrate universally to a deadzone of 4
+            switch (i) {
+                case 0:
+                case 1:
+                    offsets[i] = offsets[i] - avgs[i] / 4;
+                    sixaxis_set_offset(regs[i], offsets[i]);
+                    break;
+                case 2:
+                    // z accel is special because gravity
+                    offsets[i] = offsets[i] + (16384 - avgs[i]) / 4;
+                    sixaxis_set_offset(regs[i], offsets[i]);
+                    break;
+                case 3:
+                case 4:
+                case 5:
+                    offsets[i] = offsets[i] - avgs[i] / 4;
+                    sixaxis_set_offset(regs[i], offsets[i]);
+                    break;
+            }
 
-        sixaxis_set_offset(ACCEL_X_OFFSET, offsets[0]);
-        sixaxis_set_offset(ACCEL_Y_OFFSET, offsets[1]);
-        sixaxis_set_offset(ACCEL_Z_OFFSET, offsets[2]);
-        sixaxis_set_offset(GYRO_X_OFFSET, offsets[3]);
-        sixaxis_set_offset(GYRO_Y_OFFSET, offsets[4]);
-        sixaxis_set_offset(GYRO_Z_OFFSET, offsets[5]);
-        
-        sixaxis_averages(sensor, avgs);
+            sixaxis_averages(sensor, avgs);
 
-        // [0, 1]
-        for (i = 0; i < 2; i++) {
-            if (abs(avgs[i]) <= MPU6050_CALIBRATION_ACCEL_DEADZONE) calibrating--;
-            else offsets[i] = offsets[i] - avgs[i] / MPU6050_CALIBRATION_ACCEL_DEADZONE;
+            printf("ACCEL X => mean: %d, offset: %d\n", avgs[0], offsets[0]);
+            printf("ACCEL Y => mean: %d, offset: %d\n", avgs[1], offsets[1]);
+            printf("ACCEL Z => mean: %d, offset: %d\n", avgs[2], offsets[2]);
+            printf("GYRO X => mean: %d, offset: %d\n", avgs[3], offsets[3]);
+            printf("GYRO Y => mean: %d, offset: %d\n", avgs[4], offsets[4]);
+            printf("GYRO Z => mean: %d, offset: %d\n", avgs[5], offsets[5]);
+            printf("calibrating...\n");
         }
-
-        // [2]
-        if (abs(16384 - avgs[2]) <= MPU6050_CALIBRATION_ACCEL_DEADZONE) calibrating--;
-        else offsets[2] = offsets[2] + (16384 - offsets[2]) / MPU6050_CALIBRATION_ACCEL_DEADZONE;
-        
-        // [3, 4, 5]
-        for (i = 3; i < 6; i++) {
-            if (abs(avgs[i]) <= MPU6050_CALIBRATION_GYRO_DEADZONE) calibrating--;
-            else offsets[i] = offsets[i] - avgs[i] / MPU6050_CALIBRATION_GYRO_DEADZONE;
-        }
-
-        printf("ACCEL X => mean: %d, offset: %d\n", avgs[0], offsets[0]);
-        printf("ACCEL Y => mean: %d, offset: %d\n", avgs[1], offsets[1]);
-        printf("ACCEL Z => mean: %d, offset: %d\n", avgs[2], offsets[2]);
-        printf("GYRO X => mean: %d, offset: %d\n", avgs[3], offsets[3]);
-        printf("GYRO Y => mean: %d, offset: %d\n", avgs[4], offsets[4]);
-        printf("GYRO Z => mean: %d, offset: %d\n", avgs[5], offsets[5]);
-        printf("calibrating...\n");
     }
 }
 
@@ -219,7 +210,7 @@ void sixaxis_init(struct machine *robot, struct sixaxis *sensor, const uint8_t g
         buffer[1] = 0; // keep power register in the first index, set pull down to turn on device
         i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 2, false);
 
-        // sixaxis_calibrate(sensor);
+        sixaxis_calibrate(sensor);
 
         robot->sixaxis = NO_ERROR;
     }
