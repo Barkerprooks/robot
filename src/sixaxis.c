@@ -138,7 +138,7 @@ static void sixaxis_averages(struct sixaxis *sensor, int16_t avgs[6]) {
 static void sixaxis_calibrate(struct sixaxis *sensor) {
     // this is basically the arduino IMU calibration code, but in pico-sdk
     uint8_t i, regs[6] = { ACCEL_X_OFFSET, ACCEL_Y_OFFSET, ACCEL_Z_OFFSET, GYRO_X_OFFSET, GYRO_Y_OFFSET, GYRO_Z_OFFSET };
-    int16_t avgs[6], offsets[6];
+    int16_t avgs[6], offsets[6], targets[6] = {1, 1, 16384, 2, 2, 2};
 
     // set all offsets to 0
     for (i = 0; i < 6; i++)
@@ -149,28 +149,28 @@ static void sixaxis_calibrate(struct sixaxis *sensor) {
     offsets[0] = -avgs[0] / 8;
     offsets[1] = -avgs[1] / 8;
     offsets[2] = (16384 - avgs[2]) / 8;
-    offsets[3] = -avgs[3] / 4;
-    offsets[4] = -avgs[4] / 4;
-    offsets[5] = -avgs[5] / 4;
+    offsets[3] = -avgs[3] / 8;
+    offsets[4] = -avgs[4] / 8;
+    offsets[5] = -avgs[5] / 8;
 
     for (i = 0; i < 6; i++) {
 
-        while (abs(avgs[i]) <= 4) { // calibrate universally to a deadzone of 4
+        while (abs(targets[i] - abs(avgs[i])) >= 2) { // calibrate universally to a deadzone of 4
             switch (i) {
                 case 0:
                 case 1:
-                    offsets[i] = offsets[i] - avgs[i] / 4;
+                    offsets[i] = (offsets[i] - (avgs[i] / 8)) + 1;
                     sixaxis_set_offset(regs[i], offsets[i]);
                     break;
                 case 2:
                     // z accel is special because gravity
-                    offsets[i] = offsets[i] + (16384 - avgs[i]) / 4;
+                    offsets[i] = offsets[i] + ((16384 - avgs[i]) / 8) + 1;
                     sixaxis_set_offset(regs[i], offsets[i]);
                     break;
                 case 3:
                 case 4:
                 case 5:
-                    offsets[i] = offsets[i] - avgs[i] / 4;
+                    offsets[i] = (offsets[i] - (avgs[i] / 6)) - 1;
                     sixaxis_set_offset(regs[i], offsets[i]);
                     break;
             }
