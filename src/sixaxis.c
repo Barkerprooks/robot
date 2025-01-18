@@ -159,18 +159,18 @@ static void sixaxis_calibrate(struct sixaxis *sensor) {
             switch (i) {
                 case 0:
                 case 1:
-                    offsets[i] = (offsets[i] - (avgs[i] / 8)) + 1;
+                    offsets[i] = (offsets[i] - (avgs[i] / 8));
                     sixaxis_set_offset(regs[i], offsets[i]);
                     break;
                 case 2:
                     // z accel is special because gravity
-                    offsets[i] = offsets[i] + ((16384 - avgs[i]) / 8) + 1;
+                    offsets[i] = offsets[i] + ((16384 - avgs[i]) / 8);
                     sixaxis_set_offset(regs[i], offsets[i]);
                     break;
                 case 3:
                 case 4:
                 case 5:
-                    offsets[i] = (offsets[i] - (avgs[i] / 6)) - 1;
+                    offsets[i] = (offsets[i] - (avgs[i] / 6));
                     sixaxis_set_offset(regs[i], offsets[i]);
                     break;
             }
@@ -219,7 +219,7 @@ void sixaxis_init(struct machine *robot, struct sixaxis *sensor, const uint8_t g
         buffer[1] = 0; // keep power register in the first index, set pull down to turn on device
         i2c_write_blocking(i2c0, MPU6050_DEVICE_ID, buffer, 2, false);
 
-        sixaxis_calibrate(sensor);
+        // sixaxis_calibrate(sensor);
 
         robot->status |= SIXAXIS_INITIALIZED_FLAG;
     }

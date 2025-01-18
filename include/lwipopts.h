@@ -32,6 +32,7 @@
 #define LWIP_NETIF_TX_SINGLE_PBUF 1
 #define LWIP_DHCP_DOES_ACD_CHECK  0
 #define DHCP_DOES_ARP_CHECK       0
+#define LWIP_DEBUG                1
 
 // network interface settings
 #define LWIP_NETIF_STATUS_CALLBACK 1
