@@ -3,6 +3,7 @@
 
 #include "machine.h"
 #include "motors.h"
+
 #include "pid.h"
 #include "service.h"
 #include "sixaxis.h"
@@ -23,32 +24,54 @@ int main() {
 
     double power, start, end, delta = 0.0;
 
-    network_init(&robot, WIFI_SSID, WIFI_PASSWORD, 3);
-    service_init(&robot, &server, 4000);
-    sixaxis_init(&robot, &sensor, GYRO_FREQ_250, ACCEL_FREQ_2);
+    // network_init(&robot, WIFI_SSID, WIFI_PASSWORD, 3);
+    // service_init(&robot, &server, 4000);
+    // sixaxis_init(&robot, &sensor, GYRO_FREQ_250, ACCEL_FREQ_2);
     dc_motors_init();
 
-    sixaxis_set_offset(ACCEL_X_OFFSET, -349);
-    sixaxis_set_offset(ACCEL_Y_OFFSET, -717);
-    sixaxis_set_offset(ACCEL_Z_OFFSET, 1389);
-    sixaxis_set_offset(GYRO_X_OFFSET, 66);
-    sixaxis_set_offset(GYRO_Y_OFFSET, 17);
-    sixaxis_set_offset(GYRO_Z_OFFSET, -20);
+    // sixaxis_set_offset(ACCEL_X_OFFSET, -349);
+    // sixaxis_set_offset(ACCEL_Y_OFFSET, -717);
+    // sixaxis_set_offset(ACCEL_Z_OFFSET, 1389);
+    // sixaxis_set_offset(GYRO_X_OFFSET, 66);
+    // sixaxis_set_offset(GYRO_Y_OFFSET, 17);
+    // sixaxis_set_offset(GYRO_Z_OFFSET, -20);
+
 
     while (true) {
-//         start = (double) time_us_64() / 1000.0;
 
-//         sixaxis_read_angle(&sensor, delta);
-//         robot.speed = pid(sensor.angle, delta, 25, 1, 1);
+        printf("fwd\n");
+        dc_motors_move(MOTOR_DIRECTION_F, 100.0);
+        sleep_ms(2000);
 
-//         if (robot.speed > 0) {
-//             dc_motors_move(MOTOR_DIRECTION_F, robot.speed);
-//         } else {
-//             dc_motors_move(MOTOR_DIRECTION_B, robot.speed);
-//         }
+        printf("stop\n");
+        dc_motors_halt();
+        sleep_ms(2000);
 
-//         end = (double) time_us_64() / 1000.0;
-//         delta = (end - start) * 0.001;
+        printf("slow back\n");
+        dc_motors_move(MOTOR_DIRECTION_B, 25.0);
+        sleep_ms(2000);
+
+        // dc_motors_move(MOTOR_DIRECTION_L, 1024);
+
+        // sleep_ms(2000);
+
+        // dc_motors_move(MOTOR_DIRECTION_R, 1024);
+
+        // sleep_ms(2000);
+
+        // start = (double) time_us_64() / 1000.0;
+
+        // sixaxis_read_angle(&sensor, delta);
+        // robot.speed = pid(sensor.angle, delta, 25, 1, 1);
+
+        // if (robot.speed > 0) {
+        //     dc_motors_move(MOTOR_DIRECTION_F, robot.speed);
+        // } else {
+        //     dc_motors_move(MOTOR_DIRECTION_B, robot.speed);
+        // }
+
+        // end = (double) time_us_64() / 1000.0;
+        // delta = (end - start) * 0.001;
 // #if DEBUG
 //         printf("network: %s\n", robot.status & NETWORK_INITIALIZED_FLAG ? "connected" : "disconnected");
 //         printf("sixaxis: %s\n\n", robot.status & SIXAXIS_INITIALIZED_FLAG ? "enabled" : "disabled");

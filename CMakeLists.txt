@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-include($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
+include(pico-sdk/pico_sdk_init.cmake)
 
 project(robot)
 
@@ -8,6 +8,7 @@ pico_sdk_init()
 
 add_executable(robot 
     src/main.c
+    src/pid.c
     src/motors.c
     src/machine.c
     src/service.c
