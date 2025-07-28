@@ -1,6 +1,13 @@
 # Robot
 Building a robot using an RP2040 as the main microcontroller (Raspberry Pi Pico W)
 
+## Easy build (+ install)
+Just run the script: `make.sh`
+
+You will need the dependencies found on the [pico-sdk](https://github.com/raspberrypi/pico-sdk) homepage
+
+Optionally, with a Pico W plugged in, Hold down the `BOOTSEL` button on the Pico, then plug it into your development machine. You can supply an argument for `--install` which will copy the correct file over to the supplied path. The argument `--mount-install` allows you to install the binary on an unmounted block device. _note_: `sudo` permissions for mounting are required.
+
 ## Build
 You will need the [pico-sdk](https://github.com/raspberrypi/pico-sdk) repository. Make sure to read the documentation and set the `PICO_SDK_PATH` environment variable. After that, run these commands in the root directory
 ```
