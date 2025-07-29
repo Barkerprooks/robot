@@ -29,7 +29,7 @@ void dc_motors_init() {
 }
 
 void dc_motors_move(const uint8_t direction, const float power) {
-    uint pwm = (uint) (65535.0 * (power / 100.0));
+    uint pwm = (uint) (65535.0f * (power / 100.0f));
     
     printf("PWM speed: %u\n", pwm);
 
@@ -50,27 +50,27 @@ void dc_motors_move(const uint8_t direction, const float power) {
     switch (direction) {
         case MOTOR_DIRECTION_F:
             pwm_set_chan_level(slices[0], channels[0], pwm);
-            pwm_set_chan_level(slices[1], channels[1], 0);
-            pwm_set_chan_level(slices[2], channels[2], 0);
-            pwm_set_chan_level(slices[3], channels[3], pwm);
+            pwm_set_chan_level(slices[1], channels[1], 0.0f);
+            pwm_set_chan_level(slices[2], channels[2], pwm);
+            pwm_set_chan_level(slices[3], channels[3], 0.0f);
             break;
         case MOTOR_DIRECTION_B:
-            pwm_set_chan_level(slices[0], channels[0], 0);
+            pwm_set_chan_level(slices[0], channels[0], 0.0f);
             pwm_set_chan_level(slices[1], channels[1], pwm);
-            pwm_set_chan_level(slices[2], channels[2], pwm);
-            pwm_set_chan_level(slices[3], channels[3], 0);
+            pwm_set_chan_level(slices[2], channels[2], 0.0f);
+            pwm_set_chan_level(slices[3], channels[3], pwm);
             break;
         case MOTOR_DIRECTION_L:
-            pwm_set_chan_level(slices[0], channels[0], 0);
+            pwm_set_chan_level(slices[0], channels[0], 0.0f);
             pwm_set_chan_level(slices[1], channels[1], pwm);
-            pwm_set_chan_level(slices[2], channels[2], 0);
-            pwm_set_chan_level(slices[3], channels[3], pwm);
+            pwm_set_chan_level(slices[2], channels[2], pwm);
+            pwm_set_chan_level(slices[3], channels[3], 0.0f);
             break;
         case MOTOR_DIRECTION_R:
             pwm_set_chan_level(slices[0], channels[0], pwm);
-            pwm_set_chan_level(slices[1], channels[1], 0);
-            pwm_set_chan_level(slices[2], channels[2], pwm);
-            pwm_set_chan_level(slices[3], channels[3], 0);
+            pwm_set_chan_level(slices[1], channels[1], 0.0f);
+            pwm_set_chan_level(slices[2], channels[2], 0.0f);
+            pwm_set_chan_level(slices[3], channels[3], pwm);
             break;
     }
 }
@@ -96,7 +96,7 @@ void dc_motors_halt() {
     pwm_set_chan_level(slices[3], channels[3], 0);
 }
 
-void dc_motors_move_for_ms(const uint8_t direction, const uint8_t power, const double time) {
+void dc_motors_move_for_ms(const uint8_t direction, const float power, const double time) {
     double timer = 0.0;
 
     dc_motors_move(direction, power);
