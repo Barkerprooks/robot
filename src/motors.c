@@ -21,6 +21,7 @@ void dc_motors_init() {
         // get the PWM slice linked with the GPIO pin
         slice = pwm_gpio_to_slice_num(pins[i]);
 
+        // Set the max pwm value
         pwm_set_wrap(slice, 65535);
         
         // initialize the PWM pin
@@ -28,72 +29,46 @@ void dc_motors_init() {
     }
 }
 
+void dc_motor_pin_set_pwm_value(uint pin, double value) {
+    pwm_set_chan_level(pwm_gpio_to_slice_num(pin), pwm_gpio_to_channel(pin), value);
+}
+
 void dc_motors_move(const uint8_t direction, const float power) {
-    uint pwm = (uint) (65535.0f * (power / 100.0f));
+    uint value = (uint) (65535.0f * (power / 100.0f));
     
-    printf("PWM speed: %u\n", pwm);
-
-    uint slices[] = {
-        pwm_gpio_to_slice_num(MOTOR_L_PIN_A), 
-        pwm_gpio_to_slice_num(MOTOR_L_PIN_B),
-        pwm_gpio_to_slice_num(MOTOR_R_PIN_A), 
-        pwm_gpio_to_slice_num(MOTOR_R_PIN_B),
-    };
-
-    uint channels[] = {
-        pwm_gpio_to_channel(MOTOR_L_PIN_A),
-        pwm_gpio_to_channel(MOTOR_L_PIN_B),
-        pwm_gpio_to_channel(MOTOR_R_PIN_A),
-        pwm_gpio_to_channel(MOTOR_R_PIN_B),
-    };
-
     switch (direction) {
         case MOTOR_DIRECTION_F:
-            pwm_set_chan_level(slices[0], channels[0], pwm);
-            pwm_set_chan_level(slices[1], channels[1], 0.0f);
-            pwm_set_chan_level(slices[2], channels[2], pwm);
-            pwm_set_chan_level(slices[3], channels[3], 0.0f);
+            dc_motor_pin_set_pwm_value(MOTOR_L_PIN_A, value);
+            dc_motor_pin_set_pwm_value(MOTOR_L_PIN_B, 0.0f);
+            dc_motor_pin_set_pwm_value(MOTOR_R_PIN_A, value);
+            dc_motor_pin_set_pwm_value(MOTOR_R_PIN_B, 0.0f);
             break;
         case MOTOR_DIRECTION_B:
-            pwm_set_chan_level(slices[0], channels[0], 0.0f);
-            pwm_set_chan_level(slices[1], channels[1], pwm);
-            pwm_set_chan_level(slices[2], channels[2], 0.0f);
-            pwm_set_chan_level(slices[3], channels[3], pwm);
+            dc_motor_pin_set_pwm_value(MOTOR_L_PIN_A, 0.0f);
+            dc_motor_pin_set_pwm_value(MOTOR_L_PIN_B, value);
+            dc_motor_pin_set_pwm_value(MOTOR_R_PIN_A, 0.0f);
+            dc_motor_pin_set_pwm_value(MOTOR_R_PIN_B, value);
             break;
         case MOTOR_DIRECTION_L:
-            pwm_set_chan_level(slices[0], channels[0], 0.0f);
-            pwm_set_chan_level(slices[1], channels[1], pwm);
-            pwm_set_chan_level(slices[2], channels[2], pwm);
-            pwm_set_chan_level(slices[3], channels[3], 0.0f);
+            dc_motor_pin_set_pwm_value(MOTOR_L_PIN_A, 0.0f);
+            dc_motor_pin_set_pwm_value(MOTOR_L_PIN_B, value);
+            dc_motor_pin_set_pwm_value(MOTOR_R_PIN_A, value);
+            dc_motor_pin_set_pwm_value(MOTOR_R_PIN_B, 0.0f);
             break;
         case MOTOR_DIRECTION_R:
-            pwm_set_chan_level(slices[0], channels[0], pwm);
-            pwm_set_chan_level(slices[1], channels[1], 0.0f);
-            pwm_set_chan_level(slices[2], channels[2], 0.0f);
-            pwm_set_chan_level(slices[3], channels[3], pwm);
+            dc_motor_pin_set_pwm_value(MOTOR_L_PIN_A, value);
+            dc_motor_pin_set_pwm_value(MOTOR_L_PIN_B, 0.0f);
+            dc_motor_pin_set_pwm_value(MOTOR_R_PIN_A, 0.0f);
+            dc_motor_pin_set_pwm_value(MOTOR_R_PIN_B, value);
             break;
     }
 }
 
 void dc_motors_halt() {
-    uint slices[] = {
-        pwm_gpio_to_slice_num(MOTOR_L_PIN_A), 
-        pwm_gpio_to_slice_num(MOTOR_L_PIN_B),
-        pwm_gpio_to_slice_num(MOTOR_R_PIN_A), 
-        pwm_gpio_to_slice_num(MOTOR_R_PIN_B),
-    };
-
-    uint channels[] = {
-        pwm_gpio_to_channel(MOTOR_L_PIN_A),
-        pwm_gpio_to_channel(MOTOR_L_PIN_B),
-        pwm_gpio_to_channel(MOTOR_R_PIN_A),
-        pwm_gpio_to_channel(MOTOR_R_PIN_B),
-    };
-
-    pwm_set_chan_level(slices[0], channels[0], 0);
-    pwm_set_chan_level(slices[1], channels[1], 0);
-    pwm_set_chan_level(slices[2], channels[2], 0);
-    pwm_set_chan_level(slices[3], channels[3], 0);
+    dc_motor_pin_set_pwm_value(MOTOR_L_PIN_A, 0.0f);
+    dc_motor_pin_set_pwm_value(MOTOR_L_PIN_B, 0.0f);
+    dc_motor_pin_set_pwm_value(MOTOR_R_PIN_A, 0.0f);
+    dc_motor_pin_set_pwm_value(MOTOR_R_PIN_B, 0.0f);
 }
 
 void dc_motors_move_for_ms(const uint8_t direction, const float power, const double time) {

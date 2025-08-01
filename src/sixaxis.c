@@ -226,7 +226,7 @@ void sixaxis_init(struct machine *robot, struct sixaxis *sensor, const uint8_t g
 }
 
 void sixaxis_read_angle(struct sixaxis *sensor, const double delta) {
-    static double previous_angle = 0.0;
+    static double delta, previous_angle = 0.0;
     double accel_angle, gyro_angle;
 
     sixaxis_read_values(sensor);

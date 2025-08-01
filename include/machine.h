@@ -17,8 +17,8 @@
 // ... the rest will come later 
 
 struct machine {
-    uint8_t status;
     char name[128];
+    uint8_t status;
     int8_t speed;
 };
 

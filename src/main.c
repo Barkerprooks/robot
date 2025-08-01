@@ -19,7 +19,7 @@ void loop(struct machine *robot, struct sixaxis *sensor) {
 
     while (true) {
 
-        start = (double) time_us_64() / 1000.0;
+        // start = (double) time_us_64() / 1000.0;
 
         sixaxis_read_angle(sensor, delta);
         // robot->speed = pid(sensor->angle, delta, 64, 4, 1);
@@ -60,7 +60,6 @@ int main() {
     network_init(&robot, WIFI_SSID, WIFI_PASSWORD, 3);
     service_init(&robot, &server, 4000);
     sixaxis_init(&robot, &sensor, GYRO_FREQ_250, ACCEL_FREQ_2);
-    dc_motors_init();
 
     sixaxis_set_offset(ACCEL_X_OFFSET, -349);
     sixaxis_set_offset(ACCEL_Y_OFFSET, -717);
@@ -68,6 +67,8 @@ int main() {
     sixaxis_set_offset(GYRO_X_OFFSET, 66);
     sixaxis_set_offset(GYRO_Y_OFFSET, 17);
     sixaxis_set_offset(GYRO_Z_OFFSET, -20);
+
+    dc_motors_init();
 
     loop(&robot, &sensor);
 }
