@@ -225,11 +225,12 @@ void sixaxis_init(struct machine *robot, struct sixaxis *sensor, const uint8_t g
     }
 }
 
-void sixaxis_read_angle(struct sixaxis *sensor, const double delta) {
-    static double delta, previous_angle = 0.0;
-    double accel_angle, gyro_angle;
-
+void sixaxis_read_angle(struct sixaxis *sensor) {
+    static double start = 0.0, previous_angle = 0.0;
+    double delta, accel_angle, gyro_angle;
+    
     sixaxis_read_values(sensor);
+    delta = start - ((double) time_us_64());
 
     // calculate the tilt angle (left to right)
     accel_angle = atan2((double) sensor->accel.y, (double) sensor->accel.z) * 57.2958; // atan2() * (180 / pi) = degrees
@@ -238,4 +239,5 @@ void sixaxis_read_angle(struct sixaxis *sensor, const double delta) {
     sensor->angle = 0.9934 * (previous_angle + gyro_angle) + 0.0066 * accel_angle;
     
     previous_angle = sensor->angle;
+    start = (double) time_us_64();
 }

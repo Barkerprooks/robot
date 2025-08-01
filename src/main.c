@@ -15,13 +15,8 @@
 #define WIFI_PASSWORD ""
 
 void loop(struct machine *robot, struct sixaxis *sensor) {
-    double start, end, delta = 0.0;
-
     while (true) {
-
-        // start = (double) time_us_64() / 1000.0;
-
-        sixaxis_read_angle(sensor, delta);
+        sixaxis_read_angle(sensor);
         // robot->speed = pid(sensor->angle, delta, 64, 4, 1);
 
         if (sensor->angle > 0) {
@@ -29,9 +24,6 @@ void loop(struct machine *robot, struct sixaxis *sensor) {
         } else if (sensor->angle < 0) {
             dc_motors_move(MOTOR_DIRECTION_F, -sensor->angle);
         }
-
-        // end = (double) time_us_64() / 1000.0;
-        // delta = (end - start) * 0.001;
 #if DEBUG
         // printf("network: %s\n", robot->status & NETWORK_INITIALIZED_FLAG ? "connected" : "disconnected");
         // printf("sixaxis: %s\n\n", robot->status & SIXAXIS_INITIALIZED_FLAG ? "enabled" : "disabled");
